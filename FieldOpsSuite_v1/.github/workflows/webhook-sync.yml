@@ -1,0 +1,12 @@
+name: Supabase Webhook Sync
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  sync-webhooks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Supabase Sync
+        run: curl -X POST https://api.supabase.io/webhook/trigger -H "Authorization: Bearer ${{ secrets.SUPABASE_KEY }}" -H "Content-Type: application/json" -d '{"event":"sync","source":"FieldOpsSuite"}'
