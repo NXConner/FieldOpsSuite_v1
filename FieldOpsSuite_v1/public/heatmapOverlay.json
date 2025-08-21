@@ -1,0 +1,14 @@
+[
+  {
+    "zone": "VA-North",
+    "intensity": "medium"
+  },
+  {
+    "zone": "GA-Delta",
+    "intensity": "medium"
+  },
+  {
+    "zone": "TX-East",
+    "intensity": "high"
+  }
+]

@@ -1,0 +1,29 @@
+name: Weekly Digest Automation
+
+on:
+  schedule:
+    - cron: '0 6 * * MON'
+  workflow_dispatch:
+
+jobs:
+  generate-digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Digest Script
+        run: node scripts/generateDigest.js
+
+      - name: Commit Digest
+        run: |
+          git config --global user.name "NXConner"
+          git config --global user.email "nxconner@users.noreply.github.com"
+          git add digests/weekly.md
+          git commit -m "Automated weekly digest [skip ci]" || echo "No changes to commit"
+          git push
