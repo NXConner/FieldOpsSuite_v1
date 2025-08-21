@@ -1,0 +1,4 @@
+git add .github/workflows/sync.yml
+git commit -m "Add GitHub Actions workflow for Supabase sync"
+git push
+

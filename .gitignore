@@ -1,0 +1,1 @@
+*.exe\n*.apk\nnode_modules/\n.env

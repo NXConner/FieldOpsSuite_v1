@@ -1,0 +1,16 @@
+name: Supabase Sync + Digest Trigger
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Trigger Supabase Webhook
+        run: curl -X POST https://your-supabase-webhook-url
+O^^o
+
+^0^x^xx
