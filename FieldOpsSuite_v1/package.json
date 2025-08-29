@@ -11,7 +11,11 @@
     "integrate:os": "node scripts/createDesktopEntries.js",
     "serve": "node scripts/serve.js",
     "start": "npm-run-all -p serve",
-    "build": "echo 'No build step'"
+    "build": "echo 'No build step'",
+    "android:add": "npx cap add android",
+    "android:sync": "npx cap sync android",
+    "android:open": "npx cap open android",
+    "android:copy": "npx cap copy android"
   },
   "dependencies": {
     "@capacitor/android": "6.2.1",
