@@ -1,0 +1,21 @@
+[submodule "apps/OverWatch-Ops-System-app"]
+	path = apps/OverWatch-Ops-System-app
+	url = https://github.com/NXConner/OverWatch-Ops-System-app.git
+[submodule "apps/part-interchange-buddy"]
+	path = apps/part-interchange-buddy
+	url = https://github.com/NXConner/part-interchange-buddy.git
+[submodule "apps/patrick-county-mapper"]
+	path = apps/patrick-county-mapper
+	url = https://github.com/NXConner/patrick-county-mapper.git
+[submodule "apps/pave-ai-estimator"]
+	path = apps/pave-ai-estimator
+	url = https://github.com/NXConner/pave-ai-estimator.git
+[submodule "apps/pave-wise-weather-cast"]
+	path = apps/pave-wise-weather-cast
+	url = https://github.com/NXConner/pave-wise-weather-cast.git
+[submodule "apps/pavemaster-suite"]
+	path = apps/pavemaster-suite
+	url = https://github.com/NXConner/pavemaster-suite.git
+[submodule "apps/size-seeker-tracker-app"]
+	path = apps/size-seeker-tracker-app
+	url = https://github.com/NXConner/size-seeker-tracker-app.git
