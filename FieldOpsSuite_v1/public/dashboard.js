@@ -1,7 +1,9 @@
 (() => {
   const STORAGE_KEY = 'fieldOpsDashboardV1';
+  const ICONS_KEY = 'fieldOpsDashboardIconsV1';
 
   /** @typedef {{ order: string[], pinned: Record<string, boolean>, customize: boolean }} LayoutState */
+  /** @typedef {{ order: string[], pinned: Record<string, boolean> }} IconsState */
 
   /**
    * Read saved layout or return defaults based on current DOM.
@@ -22,6 +24,30 @@
     }
   }
 
+  /** @returns {IconsState} */
+  function loadIconsState() {
+    try {
+      const raw = localStorage.getItem(ICONS_KEY);
+      if (!raw) return getDefaultIconsState();
+      const parsed = JSON.parse(raw);
+      return {
+        order: Array.isArray(parsed.order) ? parsed.order : getDefaultIconsOrder(),
+        pinned: parsed.pinned && typeof parsed.pinned === 'object' ? parsed.pinned : {},
+      };
+    } catch (_) {
+      return getDefaultIconsState();
+    }
+  }
+
+  /** @returns {IconsState} */
+  function getDefaultIconsState() {
+    return { order: getDefaultIconsOrder(), pinned: {} };
+  }
+
+  function getDefaultIconsOrder() {
+    return Array.from(document.querySelectorAll('#iconDock .icon')).map(el => el.dataset.id);
+  }
+
   /** @returns {LayoutState} */
   function getDefaultState() {
     return { order: getDefaultOrder(), pinned: {}, customize: false };
@@ -37,6 +63,14 @@
    */
   function saveLayoutState(state) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  /**
+   * Persist icons state to localStorage.
+   * @param {IconsState} state
+   */
+  function saveIconsState(state) {
+    localStorage.setItem(ICONS_KEY, JSON.stringify(state));
   }
 
   /**
@@ -75,6 +109,34 @@
     const customizeToggle = document.getElementById('customizeToggle');
     customizeToggle.checked = !!state.customize;
     document.body.classList.toggle('customizing', !!state.customize);
+  }
+
+  /**
+   * Apply icon order and pin state to DOM.
+   * @param {IconsState} state
+   * @param {boolean} customizeEnabled
+   */
+  function applyIconsToDom(state, customizeEnabled) {
+    const dock = document.getElementById('iconDock');
+    const icons = new Map(Array.from(dock.children).map(c => [c.dataset.id, c]));
+
+    state.order.forEach(id => {
+      const el = icons.get(id);
+      if (el) dock.appendChild(el);
+    });
+    icons.forEach((el, id) => {
+      if (!state.order.includes(id)) dock.appendChild(el);
+    });
+
+    dock.querySelectorAll('.icon').forEach(el => {
+      const id = el.dataset.id;
+      const isPinned = !!state.pinned[id];
+      el.classList.toggle('pinned', isPinned);
+      const pinBtn = el.querySelector('.icon-pin-btn');
+      if (pinBtn) pinBtn.setAttribute('aria-pressed', String(isPinned));
+      const draggable = customizeEnabled && !isPinned;
+      el.setAttribute('draggable', String(draggable));
+    });
   }
 
   /**
@@ -147,6 +209,67 @@
     });
   }
 
+  function setupIconsDnD(layoutState, iconsState) {
+    const dock = document.getElementById('iconDock');
+
+    dock.addEventListener('dragstart', (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
+      const icon = target.closest('.icon');
+      if (!icon) return;
+      const id = icon.dataset.id;
+      if (!layoutState.customize || iconsState.pinned[id]) {
+        e.preventDefault();
+        return;
+      }
+      icon.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', id);
+    });
+
+    dock.addEventListener('dragend', (e) => {
+      const icon = e.target instanceof HTMLElement ? e.target.closest('.icon') : null;
+      if (icon) icon.classList.remove('dragging');
+      dock.classList.remove('drop-indicator');
+    });
+
+    dock.addEventListener('dragover', (e) => {
+      if (!layoutState.customize) return;
+      e.preventDefault();
+      dock.classList.add('drop-indicator');
+      const afterEl = getDragAfterIcon(dock, e.clientX, e.clientY);
+      const dragging = dock.querySelector('.icon.dragging');
+      if (!dragging) return;
+      if (afterEl == null) {
+        dock.appendChild(dragging);
+      } else {
+        dock.insertBefore(dragging, afterEl);
+      }
+    });
+
+    dock.addEventListener('drop', () => {
+      iconsState.order = Array.from(dock.querySelectorAll('.icon')).map(el => el.dataset.id);
+      saveIconsState(iconsState);
+      dock.classList.remove('drop-indicator');
+    });
+  }
+
+  function getDragAfterIcon(dock, x, y) {
+    const elements = [...dock.querySelectorAll('.icon:not(.dragging)')];
+    if (elements.length === 0) return null;
+    let closest = { distance: Number.POSITIVE_INFINITY, element: null };
+    for (const el of elements) {
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = cx - x;
+      const dy = cy - y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < closest.distance) closest = { distance: dist, element: el };
+    }
+    return closest.element;
+  }
+
   function setupPinning(state) {
     const container = document.getElementById('widgets');
     container.addEventListener('click', (e) => {
@@ -161,6 +284,23 @@
       if (nextPinned) state.pinned[id] = true; else delete state.pinned[id];
       saveLayoutState(state);
       applyStateToDom(state);
+    });
+  }
+
+  function setupIconsPinning(layoutState, iconsState) {
+    const dock = document.getElementById('iconDock');
+    dock.addEventListener('click', (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
+      const pinBtn = target.closest('.icon-pin-btn');
+      if (!pinBtn) return;
+      const icon = pinBtn.closest('.icon');
+      if (!icon) return;
+      const id = icon.dataset.id;
+      const nextPinned = !iconsState.pinned[id];
+      if (nextPinned) iconsState.pinned[id] = true; else delete iconsState.pinned[id];
+      saveIconsState(iconsState);
+      applyIconsToDom(iconsState, layoutState.customize);
     });
   }
 
@@ -250,9 +390,13 @@
     const btn = document.getElementById('resetLayoutBtn');
     btn.addEventListener('click', () => {
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(ICONS_KEY);
       const fresh = getDefaultState();
+      const iconsFresh = getDefaultIconsState();
       applyStateToDom(fresh);
+      applyIconsToDom(iconsFresh, fresh.customize);
       saveLayoutState(fresh);
+      saveIconsState(iconsFresh);
       // Update ref
       state.order = fresh.order;
       state.pinned = fresh.pinned;
@@ -263,9 +407,13 @@
   // Boot
   window.addEventListener('DOMContentLoaded', () => {
     const state = loadLayoutState();
+    const iconsState = loadIconsState();
     applyStateToDom(state);
+    applyIconsToDom(iconsState, state.customize);
     setupDnD(state);
+    setupIconsDnD(state, iconsState);
     setupPinning(state);
+    setupIconsPinning(state, iconsState);
     setupCustomizeToggle(state);
     setupResetButton(state);
     // Data rendering

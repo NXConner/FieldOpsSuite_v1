@@ -49,6 +49,36 @@ body {
 .btn:hover { border-color: var(--accent); color: white; }
 
 main { padding: 16px; }
+.icon-dock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(10,14,22,.6), rgba(10,14,22,.2));
+  position: sticky;
+  top: 49px; /* below topbar */
+  z-index: 19;
+}
+.icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  user-select: none;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.icon .icon-glyph { font-size: 16px; line-height: 1; }
+.icon .icon-label { font-size: 12px; color: var(--muted); }
+.icon .icon-pin-btn { appearance: none; border: none; background: transparent; color: var(--muted); cursor: pointer; }
+.icon .icon-pin-btn[aria-pressed="true"] { color: var(--accent-2); }
+.icon.dragging { opacity: 0.85; transform: scale(0.98); }
+.icon.pinned { border-color: var(--accent-2); box-shadow: 0 0 0 2px rgba(34,211,238,.2) inset; }
+.icon[draggable="true"] { cursor: grab; }
+
 .widgets {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

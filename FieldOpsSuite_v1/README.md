@@ -34,6 +34,13 @@ Open `public/index.html` in a browser. Features:
 
 To reset layout, click "Reset Layout" or clear the localStorage key.
 
+### Icon Dock (icons: drag, drop, pin, persist)
+
+- Icons are shown below the top bar.
+- Enable **Customize** to drag icons and change order.
+- Pin icons to lock them; pinned icons cannot be dragged while pinned.
+- Icon order and pin states persist under `localStorage` key `fieldOpsDashboardIconsV1`.
+
 ## CI/CD
 - Weekly digest runs every Monday 06:00 UTC.
 - Heatmap update runs every 6 hours.
