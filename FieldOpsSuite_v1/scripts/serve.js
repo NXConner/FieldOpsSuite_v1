@@ -19,8 +19,11 @@ app.use((req, res, next) => {
     res.setHeader('Service-Worker-Allowed', '/');
     res.setHeader('Cache-Control', 'no-cache');
   }
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+  // Skip COOP/COEP for the Lovable preview page so we can embed external iframes
+  if (!req.path.startsWith('/lovable-preview')) {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+  }
   next();
 });
 
@@ -30,13 +33,26 @@ app.get('/api/repos', async (req, res) => {
   try {
     const reposPath = path.join(publicDir, 'repos.json');
     const local = fs.existsSync(reposPath) ? JSON.parse(fs.readFileSync(reposPath, 'utf8')) : [];
+    // Optional Lovable entries
+    const lovablePath = path.join(publicDir, 'lovable.json');
+    const lovableRaw = fs.existsSync(lovablePath) ? JSON.parse(fs.readFileSync(lovablePath, 'utf8')) : [];
     const githubUser = (req.query.github || '').toString().trim();
     let remote = [];
     if (githubUser) {
       remote = await fetchGithubRepos(githubUser, process.env.GITHUB_TOKEN || process.env.GH_TOKEN);
     }
-    const combined = [...local];
-    const seen = new Set(local.map(r => r.remote || r.path || r.name));
+    // Normalize lovable entries into repo records
+    const lovable = Array.isArray(lovableRaw) ? lovableRaw.map((p) => ({
+      name: p.name || p.title || 'Lovable Project',
+      path: null,
+      remote: p.projectUrl || p.url || null,
+      provider: 'Lovable',
+      buildsUrl: null,
+      previewUrl: p.previewUrl || p.embedUrl || p.url || null,
+    })) : [];
+
+    const combined = [...local, ...lovable];
+    const seen = new Set(combined.map(r => r.remote || r.path || r.name));
     for (const r of remote) {
       const key = r.remote || r.name;
       if (!seen.has(key)) {
