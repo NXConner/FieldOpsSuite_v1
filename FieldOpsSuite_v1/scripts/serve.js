@@ -12,6 +12,9 @@ const rootDir = path.join(__dirname, '..');
 const distDir = path.join(rootDir, 'dist');
 const publicDir = path.join(rootDir, 'public');
 const staticDir = fs.existsSync(distDir) ? distDir : publicDir;
+const logsDir = path.join(rootDir, 'logs');
+fs.mkdirSync(logsDir, { recursive: true });
+const vitalsLogPath = path.join(logsDir, 'vitals.log');
 
 // Security headers with CSP
 const cspDirectives = {
@@ -137,8 +140,46 @@ app.post('/api/vitals', express.json({ type: '*/*' }), (req, res) => {
   try {
     const metric = req.body || {};
     // For now, just log. In production, forward to analytics.
-    console.log('web-vitals', metric);
+    const line = JSON.stringify({ ts: Date.now(), ...metric }) + '\n';
+    fs.appendFileSync(vitalsLogPath, line, 'utf8');
     res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/vitals/summary', (_req, res) => {
+  try {
+    const required = process.env.ADMIN_BEARER_TOKEN;
+    if (required) {
+      const bearer = ( _req.headers['authorization'] || '').toString();
+      if (bearer !== `Bearer ${required}`) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+    }
+    if (!fs.existsSync(vitalsLogPath)) return res.json({ count: 0, byName: {} });
+    const lines = fs.readFileSync(vitalsLogPath, 'utf8').trim().split('\n').slice(-1000);
+    const byName = new Map();
+    for (const line of lines) {
+      try {
+        const entry = JSON.parse(line);
+        const name = entry.name || 'UNKNOWN';
+        const value = Number(entry.value);
+        if (!byName.has(name)) byName.set(name, { count: 0, sum: 0, min: Infinity, max: -Infinity });
+        const agg = byName.get(name);
+        agg.count += 1;
+        if (!Number.isNaN(value)) {
+          agg.sum += value;
+          if (value < agg.min) agg.min = value;
+          if (value > agg.max) agg.max = value;
+        }
+      } catch (_) {}
+    }
+    const result = {};
+    for (const [k, v] of byName.entries()) {
+      result[k] = { count: v.count, avg: v.count ? v.sum / v.count : 0, min: isFinite(v.min) ? v.min : 0, max: isFinite(v.max) ? v.max : 0 };
+    }
+    res.json({ count: lines.length, byName: result });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

@@ -20,6 +20,25 @@ npm run digest # generates digests/weekly.md
 npm start     # runs API on 5174 and Vite dev server on 5173
 ```
 
+### Optional: Desktop (Tauri)
+
+- Requires Rust toolchain and Tauri CLI installed.
+- Dev points to Vite dev server; build serves `dist/`.
+
+```bash
+# Dev (start Vite then run tauri dev in another terminal)
+npm run desktop:dev
+
+# Build (prepare dist and then run tauri build manually)
+npm run desktop:build
+```
+
+### Admin Analytics
+
+- Set `ADMIN_BEARER_TOKEN` in server environment.
+- Open `/admin.html`. Store token in localStorage:
+  - Open devtools console and run: `localStorage.setItem('ADMIN_BEARER_TOKEN', '<your token>')`
+
 Artifacts are written to `digests/weekly.md`, `data/qrScans.json`, and `public/heatmapOverlay.json`.
 
 ### Dashboard (widgets: drag, drop, pin, persist)

@@ -16,6 +16,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "e2e": "playwright test",
+    "desktop:dev": "vite & sleep 2 && echo 'Run tauri dev manually (Rust toolchain required)'",
+    "desktop:build": "npm run build && echo 'Run tauri build manually (Rust toolchain required)'",
     "start": "npm-run-all -p serve dev",
     "android:add": "npx cap add android",
     "android:sync": "npx cap sync android",
