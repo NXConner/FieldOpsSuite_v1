@@ -4,19 +4,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FieldOpsSuite – Repositories</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
       :root { color-scheme: light dark; }
       body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Noto Sans', Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji'; margin: 0; }
-      header { padding: 16px 20px; border-bottom: 1px solid #8884; display:flex; align-items:center; gap:12px; }
+      header { padding: 16px 20px; border-bottom: 1px solid #8884; display:flex; align-items:center; gap:12px; position: sticky; top: 0; backdrop-filter: blur(6px); background: color-mix(in oklab, Canvas, transparent 20%); -webkit-backdrop-filter: blur(6px); }
       header h1 { font-size: 18px; margin: 0; }
       main { padding: 20px; max-width: 960px; margin: 0 auto; }
       .repo { border: 1px solid #8884; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; display:flex; justify-content:space-between; align-items:center; gap: 12px; }
       .meta { color: #888; font-size: 12px; }
       .actions { display:flex; gap: 8px; }
-      button, a.button { padding: 8px 12px; border-radius: 8px; border: 1px solid #8884; background: transparent; cursor: pointer; text-decoration:none; color: inherit; }
+      button, a.button { padding: 10px 14px; border-radius: 10px; border: 1px solid #8884; background: transparent; cursor: pointer; text-decoration:none; color: inherit; min-height: 44px; }
       button:hover, a.button:hover { background: #8882; }
       .empty { color: #888; padding: 24px; border: 1px dashed #8886; border-radius: 10px; }
       footer { padding: 16px 20px; border-top: 1px solid #8884; text-align:center; font-size:12px; color:#888 }
+
+      @media (max-width: 600px) {
+        header { padding: 12px 14px; gap: 8px; }
+        header h1 { font-size: 16px; }
+        main { padding: 14px; }
+        .repo { flex-direction: column; align-items: flex-start; }
+        .actions { width: 100%; flex-wrap: wrap; }
+        button, a.button { padding: 14px 16px; min-height: 48px; width: 100%; justify-content: center; }
+      }
     </style>
   </head>
   <body>
@@ -44,6 +57,7 @@
           const res = await fetch('/api/repos');
           if (!res.ok) throw new Error('Failed to load repos');
           const repos = await res.json();
+          try { localStorage.setItem('cachedRepos', JSON.stringify({ data: repos, ts: Date.now() })); } catch {}
           countEl.textContent = repos.length ? `(${repos.length})` : '';
           if (!repos.length) { emptyEl.style.display = 'block'; return; }
           emptyEl.style.display = 'none';
@@ -83,12 +97,120 @@
             listEl.appendChild(row);
           }
         } catch (err) {
+          // Try static fallback if API fails
+          try {
+            const res = await fetch('/repos.json');
+            if (res.ok) {
+              const repos = await res.json();
+              try { localStorage.setItem('cachedRepos', JSON.stringify({ data: repos, ts: Date.now() })); } catch {}
+              countEl.textContent = repos.length ? `(${repos.length})` : '';
+              if (!repos.length) { emptyEl.style.display = 'block'; return; }
+              emptyEl.style.display = 'none';
+              for (const repo of repos) {
+                const row = document.createElement('div');
+                row.className = 'repo';
+
+                const left = document.createElement('div');
+                left.innerHTML = `<div><strong>${repo.name}</strong></div><div class="meta">${repo.path}${repo.remote ? ' · ' + repo.remote : ''}</div>`;
+
+                const actions = document.createElement('div');
+                actions.className = 'actions';
+
+                if (repo.remote && /^https?:\/\//.test(repo.remote)) {
+                  const openRemote = document.createElement('a');
+                  openRemote.className = 'button';
+                  openRemote.href = repo.remote;
+                  openRemote.target = '_blank';
+                  openRemote.textContent = 'Open Remote';
+                  actions.appendChild(openRemote);
+                }
+
+                const openLocal = document.createElement('a');
+                openLocal.className = 'button';
+                openLocal.href = `vscode://file/${encodeURIComponent(repo.path)}`;
+                openLocal.textContent = 'Open in Editor';
+                actions.appendChild(openLocal);
+
+                const browseFs = document.createElement('a');
+                browseFs.className = 'button';
+                browseFs.href = repo.path.startsWith('/') ? `file://${repo.path}` : repo.path;
+                browseFs.textContent = 'Browse Files';
+                actions.appendChild(browseFs);
+
+                row.appendChild(left);
+                row.appendChild(actions);
+                listEl.appendChild(row);
+              }
+              const notice = document.createElement('div');
+              notice.className = 'meta';
+              notice.style.marginTop = '8px';
+              notice.textContent = 'Loaded static data';
+              listEl.prepend(notice);
+              return;
+            }
+          } catch {}
           countEl.textContent = '';
+          try {
+            const cached = JSON.parse(localStorage.getItem('cachedRepos') || 'null');
+            if (cached && Array.isArray(cached.data)) {
+              emptyEl.style.display = 'none';
+              const repos = cached.data;
+              countEl.textContent = repos.length ? `(${repos.length})` : '';
+              for (const repo of repos) {
+                const row = document.createElement('div');
+                row.className = 'repo';
+
+                const left = document.createElement('div');
+                left.innerHTML = `<div><strong>${repo.name}</strong></div><div class="meta">${repo.path}${repo.remote ? ' · ' + repo.remote : ''}</div>`;
+
+                const actions = document.createElement('div');
+                actions.className = 'actions';
+
+                if (repo.remote && /^https?:\/\//.test(repo.remote)) {
+                  const openRemote = document.createElement('a');
+                  openRemote.className = 'button';
+                  openRemote.href = repo.remote;
+                  openRemote.target = '_blank';
+                  openRemote.textContent = 'Open Remote';
+                  actions.appendChild(openRemote);
+                }
+
+                const openLocal = document.createElement('a');
+                openLocal.className = 'button';
+                openLocal.href = `vscode://file/${encodeURIComponent(repo.path)}`;
+                openLocal.textContent = 'Open in Editor';
+                actions.appendChild(openLocal);
+
+                const browseFs = document.createElement('a');
+                browseFs.className = 'button';
+                browseFs.href = repo.path.startsWith('/') ? `file://${repo.path}` : repo.path;
+                browseFs.textContent = 'Browse Files';
+                actions.appendChild(browseFs);
+
+                row.appendChild(left);
+                row.appendChild(actions);
+                listEl.appendChild(row);
+              }
+              const notice = document.createElement('div');
+              notice.className = 'meta';
+              notice.style.marginTop = '8px';
+              notice.textContent = 'Showing cached data (offline)';
+              listEl.prepend(notice);
+              return;
+            }
+          } catch {}
           emptyEl.style.display = 'block';
           emptyEl.textContent = 'Failed to load repositories: ' + err.message;
         }
       }
       loadRepos();
+    </script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
     </script>
   </body>
   </html>

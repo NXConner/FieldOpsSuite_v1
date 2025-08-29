@@ -8,7 +8,21 @@ const app = express();
 const rootDir = path.join(__dirname, '..');
 const publicDir = path.join(rootDir, 'public');
 
-app.use(express.static(publicDir));
+app.use((req, res, next) => {
+  // Encourage installability and correct content types
+  if (req.path.endsWith('.webmanifest')) {
+    res.setHeader('Content-Type', 'application/manifest+json');
+  }
+  if (req.path === '/sw.js') {
+    res.setHeader('Service-Worker-Allowed', '/');
+    res.setHeader('Cache-Control', 'no-cache');
+  }
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+  next();
+});
+
+app.use(express.static(publicDir, { maxAge: '1h', extensions: ['html'] }));
 
 app.get('/api/repos', (_req, res) => {
   const reposPath = path.join(publicDir, 'repos.json');
