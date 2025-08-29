@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FieldOpsSuite – Admin Analytics</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>Admin Analytics</h1>
+      <div class="controls">
+        <a class="btn" href="./index.html">Back to Dashboard</a>
+      </div>
+    </header>
+    <main>
+      <section class="widget">
+        <header class="widget-header">
+          <h2 class="widget-title">Web Vitals Summary</h2>
+        </header>
+        <div class="widget-body" id="summaryBody">
+          <div class="skeleton"></div>
+        </div>
+      </section>
+    </main>
+    <script>
+      async function loadSummary(){
+        const token = localStorage.getItem('ADMIN_BEARER_TOKEN') || '';
+        const res = await fetch('/api/vitals/summary', { headers: token ? { Authorization: 'Bearer ' + token } : {} });
+        const el = document.getElementById('summaryBody');
+        if (!res.ok) { el.textContent = 'Unauthorized or error.'; return; }
+        const data = await res.json();
+        const table = document.createElement('table');
+        table.style.width = '100%';
+        table.style.borderCollapse = 'collapse';
+        const header = document.createElement('tr');
+        header.innerHTML = '<th style="text-align:left">Metric</th><th>Count</th><th>Avg</th><th>Min</th><th>Max</th>';
+        table.appendChild(header);
+        for (const [name, stats] of Object.entries(data.byName || {})) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${name}</td><td>${stats.count}</td><td>${stats.avg.toFixed(2)}</td><td>${stats.min.toFixed(2)}</td><td>${stats.max.toFixed(2)}</td>`;
+          table.appendChild(tr);
+        }
+        el.innerHTML = '';
+        el.appendChild(table);
+      }
+      loadSummary();
+    </script>
+  </body>
+  </html>
+

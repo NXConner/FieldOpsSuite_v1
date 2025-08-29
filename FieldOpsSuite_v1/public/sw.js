@@ -1,10 +1,13 @@
-const CACHE_NAME = 'fieldops-v1';
+const CACHE_NAME = 'fieldops-v2';
 const PRECACHE_URLS = [
-  '/',
-  '/index.html',
-  '/manifest.webmanifest',
-  '/heatmapOverlay.json',
-  '/repos.json'
+  './',
+  './index.html',
+  './styles.css',
+  './dashboard.js',
+  './bridge.js',
+  './manifest.webmanifest',
+  './heatmapOverlay.json',
+  './repos.html'
 ];
 
 self.addEventListener('install', (event) => {
@@ -33,7 +36,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for static assets
+  // Cache-first for static assets with offline fallback
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
@@ -41,7 +44,7 @@ self.addEventListener('fetch', (event) => {
         const copy = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
         return response;
-      });
+      }).catch(() => caches.match('./index.html'));
     })
   );
 });

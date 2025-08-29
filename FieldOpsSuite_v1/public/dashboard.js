@@ -316,40 +316,98 @@
   async function renderHeatmap() {
     const el = document.getElementById('heatmapBody');
     try {
-      const res = await fetch('heatmapOverlay.json', { cache: 'no-store' });
-      if (!res.ok) throw new Error('Failed to load');
-      const data = await res.json();
-      if (!Array.isArray(data)) throw new Error('Unexpected format');
-      if (data.length === 0) {
-        el.innerHTML = '<span class="muted">No heatmap zones.</span>';
-        return;
+      const [overlayRes, geoRes] = await Promise.all([
+        fetch('heatmapOverlay.json', { cache: 'no-store' }),
+        fetch('heatmap.geojson', { cache: 'no-store' })
+      ]);
+      if (!overlayRes.ok) throw new Error('Failed to load overlay');
+      const data = await overlayRes.json();
+      const geo = geoRes.ok ? await geoRes.json() : null;
+      const filterSel = document.getElementById('heatmapFilter');
+
+      function renderList(filter) {
+        const filtered = Array.isArray(data) ? data.filter(d => filter === 'all' || d.intensity === filter) : [];
+        if (filtered.length === 0) {
+          el.innerHTML = '<span class="muted">No heatmap zones.</span>';
+          return;
+        }
+        const frag = document.createDocumentFragment();
+        const list = document.createElement('ul');
+        list.style.listStyle = 'none';
+        list.style.padding = '0';
+        list.style.margin = '0';
+        for (const entry of filtered) {
+          const li = document.createElement('li');
+          li.style.display = 'flex';
+          li.style.alignItems = 'center';
+          li.style.gap = '8px';
+          const badge = document.createElement('span');
+          badge.textContent = String(entry.intensity || '').toUpperCase();
+          badge.style.padding = '2px 6px';
+          badge.style.borderRadius = '6px';
+          badge.style.border = '1px solid var(--border)';
+          badge.style.background = 'rgba(56,189,248,.08)';
+          badge.style.color = 'var(--accent)';
+          const text = document.createElement('span');
+          text.textContent = String(entry.zone || 'Unknown zone');
+          li.appendChild(badge);
+          li.appendChild(text);
+          list.appendChild(li);
+        }
+        frag.appendChild(list);
+        el.innerHTML = '';
+        el.appendChild(frag);
       }
-      const frag = document.createDocumentFragment();
-      const list = document.createElement('ul');
-      list.style.listStyle = 'none';
-      list.style.padding = '0';
-      list.style.margin = '0';
-      for (const entry of data) {
-        const li = document.createElement('li');
-        li.style.display = 'flex';
-        li.style.alignItems = 'center';
-        li.style.gap = '8px';
-        const badge = document.createElement('span');
-        badge.textContent = String(entry.intensity || '').toUpperCase();
-        badge.style.padding = '2px 6px';
-        badge.style.borderRadius = '6px';
-        badge.style.border = '1px solid var(--border)';
-        badge.style.background = 'rgba(56,189,248,.08)';
-        badge.style.color = 'var(--accent)';
-        const text = document.createElement('span');
-        text.textContent = String(entry.zone || 'Unknown zone');
-        li.appendChild(badge);
-        li.appendChild(text);
-        list.appendChild(li);
+
+      function renderMap(filter) {
+        const container = document.getElementById('heatmapMap');
+        if (!container || !window.maplibregl || !geo || !geo.features) return;
+        container.innerHTML = '';
+        const map = new window.maplibregl.Map({
+          container,
+          style: 'https://demotiles.maplibre.org/style.json',
+          center: [-95, 38],
+          zoom: 3.2,
+        });
+        map.on('load', () => {
+          const filtered = {
+            type: 'FeatureCollection',
+            features: geo.features.filter(f => {
+              return filter === 'all' || (f.properties && f.properties.intensity === filter);
+            })
+          };
+          map.addSource('zones', { type: 'geojson', data: filtered });
+          map.addLayer({
+            id: 'zones-circles',
+            type: 'circle',
+            source: 'zones',
+            paint: {
+              'circle-radius': [
+                'interpolate', ['linear'], ['get', 'count'],
+                0, 4,
+                200, 12,
+                400, 18
+              ],
+              'circle-color': [
+                'match', ['get', 'intensity'],
+                'high', '#ef4444',
+                'medium', '#f59e0b',
+                'low', '#22c55e',
+                '#a3a3a3'
+              ],
+              'circle-opacity': 0.8,
+            },
+          });
+        });
       }
-      frag.appendChild(list);
-      el.innerHTML = '';
-      el.appendChild(frag);
+
+      const applyAll = () => {
+        const filter = filterSel ? filterSel.value : 'all';
+        renderList(filter);
+        renderMap(filter);
+      };
+      if (filterSel) filterSel.addEventListener('change', applyAll);
+      applyAll();
     } catch (err) {
       el.innerHTML = '<span class="danger">Failed to load heatmap.</span>';
     }

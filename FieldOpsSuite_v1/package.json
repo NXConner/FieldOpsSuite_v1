@@ -10,8 +10,15 @@
     "scan:repos": "node scripts/scanRepos.js",
     "integrate:os": "node scripts/createDesktopEntries.js",
     "serve": "node scripts/serve.js",
-    "start": "npm-run-all -p serve",
-    "build": "echo 'No build step'",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "desktop:dev": "vite & sleep 2 && echo 'Run tauri dev manually (Rust toolchain required)'",
+    "desktop:build": "npm run build && echo 'Run tauri build manually (Rust toolchain required)'",
+    "start": "npm-run-all -p serve dev",
     "android:add": "npx cap add android",
     "android:sync": "npx cap sync android",
     "android:open": "npx cap open android",
@@ -21,11 +28,17 @@
     "@capacitor/android": "6.2.1",
     "@capacitor/cli": "6.2.1",
     "@capacitor/core": "6.2.1",
+    "helmet": "7.1.0",
     "express": "4.19.2",
     "open": "10.1.0"
   },
   "devDependencies": {
-    "npm-run-all": "4.1.5"
+    "npm-run-all": "4.1.5",
+    "vite": "5.4.8",
+    "eslint": "9.11.1",
+    "@eslint/js": "9.11.1",
+    "vitest": "1.6.0",
+    "playwright": "1.47.2"
   },
   "type": "commonjs"
 }

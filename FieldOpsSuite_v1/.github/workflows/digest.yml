@@ -20,10 +20,22 @@ jobs:
       - name: Run Digest Script
         run: node scripts/generateDigest.js
 
-      - name: Commit Digest
+      - name: Upload Digest Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-digest
+          path: digests/weekly.md
+
+      - name: Upload to Supabase Storage (optional)
+        if: ${{ secrets.SUPABASE_URL && secrets.SUPABASE_SERVICE_ROLE_KEY && secrets.SUPABASE_BUCKET }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_BUCKET: ${{ secrets.SUPABASE_BUCKET }}
         run: |
-          git config --global user.name "NXConner"
-          git config --global user.email "nxconner@users.noreply.github.com"
-          git add digests/weekly.md
-          git commit -m "Automated weekly digest [skip ci]" || echo "No changes to commit"
-          git push
+          set -e
+          curl -sS -X POST "$SUPABASE_URL/storage/v1/object/$SUPABASE_BUCKET/digests/weekly.md" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: text/markdown" \
+            --data-binary @digests/weekly.md \
+            -o /dev/null -w "%{http_code}\n"

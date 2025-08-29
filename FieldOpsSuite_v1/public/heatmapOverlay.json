@@ -1,14 +1,17 @@
 [
   {
     "zone": "VA-North",
-    "intensity": "medium"
+    "intensity": "medium",
+    "count": 128
   },
   {
     "zone": "GA-Delta",
-    "intensity": "medium"
+    "intensity": "medium",
+    "count": 94
   },
   {
     "zone": "TX-East",
-    "intensity": "high"
+    "intensity": "high",
+    "count": 203
   }
 ]

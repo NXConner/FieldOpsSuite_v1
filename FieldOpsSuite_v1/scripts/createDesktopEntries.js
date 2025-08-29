@@ -29,9 +29,9 @@ function createDesktopEntryForRepo(repo) {
 
   // Use xdg-open to open the repo path in the default file manager or code editor
   // If a remote is present and is https, opening remote in browser can be useful
-  const execCommand = repo.remote && /^https?:\/\//.test(repo.remote)
-    ? `xdg-open ${repo.remote}`
-    : `xdg-open ${repo.path}`;
+  const target = repo.remote && /^https?:\/\//.test(repo.remote) ? repo.remote : repo.path;
+  const safe = String(target || '').replace(/"/g, '\\"');
+  const execCommand = `xdg-open "${safe}"`;
 
   const desktopFile = [
     '[Desktop Entry]',

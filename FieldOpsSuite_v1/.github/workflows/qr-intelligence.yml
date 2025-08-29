@@ -23,10 +23,35 @@ jobs:
       - name: Generate Heatmap
         run: node scripts/generateHeatmap.js
 
-      - name: Commit Heatmap
+      - name: Upload Heatmap Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: heatmap-overlay
+          path: |
+            data/qrScans.json
+            public/heatmapOverlay.json
+            public/heatmap.geojson
+
+      - name: Upload to Supabase Storage (optional)
+        if: ${{ secrets.SUPABASE_URL && secrets.SUPABASE_SERVICE_ROLE_KEY && secrets.SUPABASE_BUCKET }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_BUCKET: ${{ secrets.SUPABASE_BUCKET }}
         run: |
-          git config --global user.name "NXConner"
-          git config --global user.email "nxconner@users.noreply.github.com"
-          git add data/qrScans.json public/heatmapOverlay.json
-          git commit -m "Update heatmap overlay [skip ci]" || echo "No changes to commit"
-          git push
+          set -e
+          curl -sS -X POST "$SUPABASE_URL/storage/v1/object/$SUPABASE_BUCKET/public/heatmapOverlay.json" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            --data-binary @public/heatmapOverlay.json \
+            -o /dev/null -w "%{http_code}\n"
+          curl -sS -X POST "$SUPABASE_URL/storage/v1/object/$SUPABASE_BUCKET/public/heatmap.geojson" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/geo+json" \
+            --data-binary @public/heatmap.geojson \
+            -o /dev/null -w "%{http_code}\n"
+          curl -sS -X POST "$SUPABASE_URL/storage/v1/object/$SUPABASE_BUCKET/data/qrScans.json" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            --data-binary @data/qrScans.json \
+            -o /dev/null -w "%{http_code}\n"

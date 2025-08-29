@@ -1,0 +1,50 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -77.5,
+          38.3
+        ]
+      },
+      "properties": {
+        "zone": "VA-North",
+        "intensity": "medium",
+        "count": 128
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -84.4,
+          33.7
+        ]
+      },
+      "properties": {
+        "zone": "GA-Delta",
+        "intensity": "medium",
+        "count": 94
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -95.4,
+          30.1
+        ]
+      },
+      "properties": {
+        "zone": "TX-East",
+        "intensity": "high",
+        "count": 203
+      }
+    }
+  ]
+}
