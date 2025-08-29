@@ -80,6 +80,12 @@ npm run android:open
 - CI/CD via Supabase + GitHub
 - Public syndication via microsite, press room, and investor dashboard
 
+## Security & Observability
+- CSP via helmet allows required CDNs (MapLibre, Sentry, web-vitals) and self.
+- `/api/install` gated by `ENABLE_INSTALL_API=1`, localhost-only, and optional `INSTALL_BEARER_TOKEN`.
+- Optional Sentry: set `SENTRY_DSN` (served to client via `window.SENTRY_DSN`).
+- Web Vitals posted to `/api/vitals`; currently logged server-side.
+
 ## License
 MIT or custom licensing logic
 

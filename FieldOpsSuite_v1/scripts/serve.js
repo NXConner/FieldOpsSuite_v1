@@ -13,9 +13,20 @@ const distDir = path.join(rootDir, 'dist');
 const publicDir = path.join(rootDir, 'public');
 const staticDir = fs.existsSync(distDir) ? distDir : publicDir;
 
-// Security headers
+// Security headers with CSP
+const cspDirectives = {
+  defaultSrc: ["'self'"],
+  scriptSrc: ["'self'", 'https://unpkg.com'],
+  styleSrc: ["'self'", 'https://unpkg.com', "'unsafe-inline'"],
+  imgSrc: ["'self'", 'data:', 'blob:', 'https://demotiles.maplibre.org'],
+  connectSrc: ["'self'", 'https://api.github.com', 'https://*.supabase.co', 'https://demotiles.maplibre.org'],
+  fontSrc: ["'self'", 'data:'],
+  workerSrc: ["'self'", 'blob:'],
+  frameAncestors: ["'self'"],
+  baseUri: ["'self'"],
+};
 app.use(helmet({
-  contentSecurityPolicy: false, // keep simple for dev; add CSP later if needed
+  contentSecurityPolicy: { directives: cspDirectives },
   crossOriginEmbedderPolicy: false,
 }));
 
@@ -71,6 +82,11 @@ app.post('/api/install', express.json(), (req, res) => {
   if (!isLocal) {
     return res.status(403).json({ error: 'Local access only' });
   }
+  const bearer = (req.headers['authorization'] || '').toString();
+  const required = process.env.INSTALL_BEARER_TOKEN;
+  if (required && bearer !== `Bearer ${required}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
   try {
     const repo = req.body && req.body.repo;
     if (!repo || !repo.name || !repo.path) {
@@ -114,6 +130,18 @@ app.get('/api/github/:user/repos', async (req, res) => {
 app.get('/', (_req, res) => {
   const indexPath = path.join(staticDir, 'index.html');
   res.sendFile(indexPath);
+});
+
+// Web Vitals endpoint (optional metrics ingestion)
+app.post('/api/vitals', express.json({ type: '*/*' }), (req, res) => {
+  try {
+    const metric = req.body || {};
+    // For now, just log. In production, forward to analytics.
+    console.log('web-vitals', metric);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 const port = Number(process.env.PORT) || 5174;
