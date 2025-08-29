@@ -53,6 +53,9 @@ node scripts/serve.js  # serves dist/ on http://localhost:5174 (and proxies /api
 - Weekly digest runs every Monday 06:00 UTC.
 - Heatmap update runs every 6 hours.
 - Enhancement logger updates on pushes that change `js`, `ts`, `apk`, or `exe` files.
+- Quality gates (lint, test, build) run on pushes and PRs.
+- Artifacts (digest, heatmap, site) are uploaded instead of committing to `main`.
+- Optional Supabase storage upload when `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `SUPABASE_BUCKET` are configured.
 
 ## Deployment
 - CI/CD via Supabase + GitHub
