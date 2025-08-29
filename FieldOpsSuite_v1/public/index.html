@@ -52,7 +52,7 @@
             row.className = 'repo';
 
             const left = document.createElement('div');
-            left.innerHTML = `<div><strong>${repo.name}</strong></div><div class="meta">${repo.path}${repo.remote ? ' · ' + repo.remote : ''}</div>`;
+            left.innerHTML = `<div><strong>${repo.name}</strong> ${repo.provider ? `<span class="meta">· ${repo.provider}</span>` : ''}</div><div class="meta">${repo.path}${repo.remote ? ' · ' + repo.remote : ''}</div>`;
 
             const actions = document.createElement('div');
             actions.className = 'actions';
@@ -66,6 +66,15 @@
               actions.appendChild(openRemote);
             }
 
+            if (repo.buildsUrl) {
+              const openBuilds = document.createElement('a');
+              openBuilds.className = 'button';
+              openBuilds.href = repo.buildsUrl;
+              openBuilds.target = '_blank';
+              openBuilds.textContent = 'Builds';
+              actions.appendChild(openBuilds);
+            }
+
             const openLocal = document.createElement('a');
             openLocal.className = 'button';
             openLocal.href = `vscode://file/${encodeURIComponent(repo.path)}`;
@@ -77,6 +86,25 @@
             browseFs.href = repo.path.startsWith('/') ? `file://${repo.path}` : repo.path;
             browseFs.textContent = 'Browse Files';
             actions.appendChild(browseFs);
+
+            const installBtn = document.createElement('button');
+            installBtn.textContent = 'Install App';
+            installBtn.onclick = async () => {
+              installBtn.disabled = true;
+              installBtn.textContent = 'Installing…';
+              try {
+                const resp = await fetch('/api/install', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ repo })});
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data && data.error || 'Install failed');
+                installBtn.textContent = 'Installed';
+              } catch (e) {
+                installBtn.textContent = 'Install Failed';
+                alert('Install error: ' + e.message);
+              } finally {
+                setTimeout(() => { installBtn.disabled = false; installBtn.textContent = 'Install App'; }, 1500);
+              }
+            };
+            actions.appendChild(installBtn);
 
             row.appendChild(left);
             row.appendChild(actions);

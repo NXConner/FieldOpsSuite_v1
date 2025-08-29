@@ -6,6 +6,11 @@ const path = require('path');
 const workspaceRoot = path.join(__dirname, '..');
 const publicDir = path.join(workspaceRoot, 'public');
 const outputPath = path.join(publicDir, 'repos.json');
+const BUILD_BADGE_PROVIDERS = [
+  { name: 'GitHub Actions', match: /github\.com[:/].+\.git$/i, buildUrl: (remote) => remote.replace(/\.git$/, '') + '/actions' },
+  { name: 'GitLab CI', match: /gitlab\.com[:/]/i, buildUrl: (remote) => remote.replace(/\.git$/, '') + '/-/pipelines' },
+  { name: 'Bitbucket Pipelines', match: /bitbucket\.org[:/]/i, buildUrl: (remote) => remote.replace(/\.git$/, '') + '/addons/bitbucket-pipelines/home' },
+];
 
 function isGitRepository(directoryPath) {
   try {
@@ -82,10 +87,22 @@ function buildRepositoryRecord(repoDir) {
       remoteUrl = match[1].trim();
     }
   }
+  let provider = null;
+  let buildsUrl = null;
+  if (remoteUrl) {
+    const prov = BUILD_BADGE_PROVIDERS.find(p => p.match.test(remoteUrl));
+    if (prov) {
+      provider = prov.name;
+      buildsUrl = prov.buildUrl(remoteUrl.replace(/^git@/, 'https://').replace(/:/, '/'));
+    }
+  }
+
   return {
     name,
     path: repoDir,
     remote: remoteUrl,
+    provider,
+    buildsUrl,
   };
 }
 
