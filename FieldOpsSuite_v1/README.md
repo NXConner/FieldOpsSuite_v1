@@ -21,6 +21,26 @@ node scripts/fetchQRScans.js && node scripts/generateHeatmap.js
 
 Artifacts are written to `digests/weekly.md`, `data/qrScans.json`, and `public/heatmapOverlay.json`.
 
+### Dashboard (widgets: drag, drop, pin, persist)
+
+Open `public/index.html` in a browser. Features:
+
+- Drag and drop widgets to rearrange when **Customize** is enabled
+- Pin widgets to lock their position (disables dragging for pinned)
+- Layout and pin states persist in `localStorage` under key `fieldOpsDashboardV1`
+- Heatmap widget reads from `public/heatmapOverlay.json`
+- QR scans preview reads from `data/qrScans.json`
+- Digest preview reads from `digests/weekly.md`
+
+To reset layout, click "Reset Layout" or clear the localStorage key.
+
+### Icon Dock (icons: drag, drop, pin, persist)
+
+- Icons are shown below the top bar.
+- Enable **Customize** to drag icons and change order.
+- Pin icons to lock them; pinned icons cannot be dragged while pinned.
+- Icon order and pin states persist under `localStorage` key `fieldOpsDashboardIconsV1`.
+
 ## CI/CD
 - Weekly digest runs every Monday 06:00 UTC.
 - Heatmap update runs every 6 hours.
