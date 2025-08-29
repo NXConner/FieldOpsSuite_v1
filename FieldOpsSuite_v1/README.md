@@ -42,6 +42,25 @@ npm run build   # outputs to dist/
 node scripts/serve.js  # serves dist/ on http://localhost:5174 (and proxies /api when using Vite dev)
 ```
 
+### Android (Capacitor)
+
+```bash
+# Ensure dist/ exists
+npm run build
+
+# Sync Android platform
+npm run android:add   # first time
+npm run android:sync
+
+# Open Android Studio
+npm run android:open
+
+# Notes:
+# - App uses dist/ as webDir.
+# - External links open in system browser via Capacitor Browser plugin if available.
+# - All asset URLs are relative for offline support.
+```
+
 ### Icon Dock (icons: drag, drop, pin, persist)
 
 - Icons are shown below the top bar.
