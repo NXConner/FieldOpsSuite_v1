@@ -3,15 +3,28 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const helmet = require('helmet');
 const { createDesktopEntryForRepo, getDesktopEntryPathForRepo } = require('./createDesktopEntries');
 const { fetchGithubRepos } = require('./github');
 
 const app = express();
 const rootDir = path.join(__dirname, '..');
+const distDir = path.join(rootDir, 'dist');
 const publicDir = path.join(rootDir, 'public');
+const staticDir = fs.existsSync(distDir) ? distDir : publicDir;
 
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: false, // keep simple for dev; add CSP later if needed
+  crossOriginEmbedderPolicy: false,
+}));
+
+// Optional COOP/COEP for advanced features; gate via env
 app.use((req, res, next) => {
-  // Encourage installability and correct content types
+  if (process.env.ENABLE_COOP === '1') {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+  }
   if (req.path.endsWith('.webmanifest')) {
     res.setHeader('Content-Type', 'application/manifest+json');
   }
@@ -19,12 +32,10 @@ app.use((req, res, next) => {
     res.setHeader('Service-Worker-Allowed', '/');
     res.setHeader('Cache-Control', 'no-cache');
   }
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
   next();
 });
 
-app.use(express.static(publicDir, { maxAge: '1h', extensions: ['html'] }));
+app.use(express.static(staticDir, { maxAge: '1h', extensions: ['html'] }));
 
 app.get('/api/repos', async (req, res) => {
   try {
@@ -51,10 +62,26 @@ app.get('/api/repos', async (req, res) => {
 });
 
 app.post('/api/install', express.json(), (req, res) => {
+  // Gate the endpoint to explicit opt-in and local-only requests
+  if (process.env.ENABLE_INSTALL_API !== '1') {
+    return res.status(403).json({ error: 'Install API disabled' });
+  }
+  const ip = req.ip || req.connection?.remoteAddress || '';
+  const isLocal = ip.includes('127.0.0.1') || ip.includes('::1') || req.hostname === 'localhost';
+  if (!isLocal) {
+    return res.status(403).json({ error: 'Local access only' });
+  }
   try {
     const repo = req.body && req.body.repo;
     if (!repo || !repo.name || !repo.path) {
       return res.status(400).json({ error: 'Invalid repo payload' });
+    }
+    // Basic validation
+    if (typeof repo.name !== 'string' || typeof repo.path !== 'string') {
+      return res.status(400).json({ error: 'Invalid repo fields' });
+    }
+    if (repo.remote && !/^https?:\/\//.test(String(repo.remote))) {
+      return res.status(400).json({ error: 'Invalid remote URL' });
     }
     const file = createDesktopEntryForRepo(repo);
     return res.json({ ok: true, desktopEntry: file });
@@ -85,10 +112,11 @@ app.get('/api/github/:user/repos', async (req, res) => {
 });
 
 app.get('/', (_req, res) => {
-  res.sendFile(path.join(publicDir, 'index.html'));
+  const indexPath = path.join(staticDir, 'index.html');
+  res.sendFile(indexPath);
 });
 
-const port = process.env.PORT || 5173;
+const port = Number(process.env.PORT) || 5174;
 app.listen(port, () => {
   console.log(`📦 FieldOpsSuite server running at http://localhost:${port}`);
 });

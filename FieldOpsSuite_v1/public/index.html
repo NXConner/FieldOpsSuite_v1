@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>FieldOpsSuite – Dashboard</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <noscript>This app requires JavaScript enabled.</noscript>
+    <header class="topbar">
+      <h1>FieldOpsSuite</h1>
+      <div class="controls">
+        <label class="toggle">
+          <input id="customizeToggle" type="checkbox" />
+          <span>Customize</span>
+        </label>
+        <button id="resetLayoutBtn" class="btn" type="button">Reset Layout</button>
+        <a class="btn" href="/repos.html">Repositories</a>
+      </div>
+    </header>
+
+    <nav id="iconDock" class="icon-dock">
+      <div class="icon" data-id="overview">
+        <span class="icon-glyph">📊</span>
+        <span class="icon-label">Overview</span>
+        <button class="icon-pin-btn" aria-pressed="false" title="Pin">📌</button>
+      </div>
+      <div class="icon" data-id="heatmap">
+        <span class="icon-glyph">🗺️</span>
+        <span class="icon-label">Heatmap</span>
+        <button class="icon-pin-btn" aria-pressed="false" title="Pin">📌</button>
+      </div>
+      <div class="icon" data-id="digest">
+        <span class="icon-glyph">🗞️</span>
+        <span class="icon-label">Digest</span>
+        <button class="icon-pin-btn" aria-pressed="false" title="Pin">📌</button>
+      </div>
+    </nav>
+
+    <main>
+      <section id="widgets" class="widgets">
+        <article class="widget" data-id="heatmap-widget">
+          <header class="widget-header">
+            <h2 class="widget-title">Crew Density Heatmap</h2>
+            <div class="widget-actions">
+              <button class="pin-btn" aria-pressed="false" title="Pin">📌</button>
+              <span class="drag-handle" title="Drag">⠿</span>
+            </div>
+          </header>
+          <div id="heatmapBody" class="widget-body">
+            <div class="skeleton"></div>
+          </div>
+        </article>
+
+        <article class="widget" data-id="qr-widget">
+          <header class="widget-header">
+            <h2 class="widget-title">QR Scans</h2>
+            <div class="widget-actions">
+              <button class="pin-btn" aria-pressed="false" title="Pin">📌</button>
+              <span class="drag-handle" title="Drag">⠿</span>
+            </div>
+          </header>
+          <div id="qrBody" class="widget-body">
+            <div class="skeleton"></div>
+          </div>
+        </article>
+
+        <article class="widget" data-id="digest-widget">
+          <header class="widget-header">
+            <h2 class="widget-title">Weekly Digest</h2>
+            <div class="widget-actions">
+              <button class="pin-btn" aria-pressed="false" title="Pin">📌</button>
+              <span class="drag-handle" title="Drag">⠿</span>
+            </div>
+          </header>
+          <div id="digestBody" class="widget-body">
+            <div class="skeleton"></div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
+    <script src="/dashboard.js" defer></script>
+  </body>
+  </html>

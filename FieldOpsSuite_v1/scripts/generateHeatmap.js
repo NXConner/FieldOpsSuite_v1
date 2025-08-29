@@ -22,5 +22,9 @@ function generateHeatmap() {
   console.log('✅ Heatmap overlay generated');
 }
 
-generateHeatmap();
+if (require.main === module) {
+  generateHeatmap();
+}
+
+module.exports = { generateHeatmap };
 

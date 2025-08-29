@@ -1,14 +1,14 @@
 [
   {
-    "zone": "VA-North",
+    "zone": "A",
+    "intensity": "low"
+  },
+  {
+    "zone": "B",
     "intensity": "medium"
   },
   {
-    "zone": "GA-Delta",
-    "intensity": "medium"
-  },
-  {
-    "zone": "TX-East",
+    "zone": "C",
     "intensity": "high"
   }
 ]

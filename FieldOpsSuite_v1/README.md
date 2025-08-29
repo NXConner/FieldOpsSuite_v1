@@ -15,15 +15,16 @@ Requires Node.js 18+ (Node 20 recommended).
 
 ```bash
 npm install
-node scripts/generateDigest.js
-node scripts/fetchQRScans.js && node scripts/generateHeatmap.js
+npm run scans # generates data/qrScans.json and public/heatmapOverlay.json
+npm run digest # generates digests/weekly.md
+npm start     # runs API on 5174 and Vite dev server on 5173
 ```
 
 Artifacts are written to `digests/weekly.md`, `data/qrScans.json`, and `public/heatmapOverlay.json`.
 
 ### Dashboard (widgets: drag, drop, pin, persist)
 
-Open `public/index.html` in a browser. Features:
+Open `http://localhost:5173` in a browser. Features:
 
 - Drag and drop widgets to rearrange when **Customize** is enabled
 - Pin widgets to lock their position (disables dragging for pinned)
@@ -33,6 +34,13 @@ Open `public/index.html` in a browser. Features:
 - Digest preview reads from `digests/weekly.md`
 
 To reset layout, click "Reset Layout" or clear the localStorage key.
+
+### Build
+
+```bash
+npm run build   # outputs to dist/
+node scripts/serve.js  # serves dist/ on http://localhost:5174 (and proxies /api when using Vite dev)
+```
 
 ### Icon Dock (icons: drag, drop, pin, persist)
 
