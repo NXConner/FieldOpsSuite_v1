@@ -15,12 +15,17 @@ function sanitizeFileName(name) {
   return name.replace(/[^a-zA-Z0-9._-]/g, '-');
 }
 
+function getDesktopEntryPathForRepo(repo) {
+  const applicationsDir = getApplicationsDir();
+  const fileName = `fieldops-${sanitizeFileName(repo.name)}.desktop`;
+  return path.join(applicationsDir, fileName);
+}
+
 function createDesktopEntryForRepo(repo) {
   const applicationsDir = getApplicationsDir();
   fs.mkdirSync(applicationsDir, { recursive: true });
 
-  const fileName = `fieldops-${sanitizeFileName(repo.name)}.desktop`;
-  const targetPath = path.join(applicationsDir, fileName);
+  const targetPath = getDesktopEntryPathForRepo(repo);
 
   // Use xdg-open to open the repo path in the default file manager or code editor
   // If a remote is present and is https, opening remote in browser can be useful
@@ -66,5 +71,14 @@ function main() {
   }
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  getApplicationsDir,
+  sanitizeFileName,
+  getDesktopEntryPathForRepo,
+  createDesktopEntryForRepo,
+};
 
