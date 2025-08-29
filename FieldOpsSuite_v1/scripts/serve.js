@@ -4,6 +4,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const { createDesktopEntryForRepo, getDesktopEntryPathForRepo } = require('./createDesktopEntries');
+const { fetchGithubRepos } = require('./github');
 
 const app = express();
 const rootDir = path.join(__dirname, '..');
@@ -11,13 +12,28 @@ const publicDir = path.join(rootDir, 'public');
 
 app.use(express.static(publicDir));
 
-app.get('/api/repos', (_req, res) => {
-  const reposPath = path.join(publicDir, 'repos.json');
-  if (!fs.existsSync(reposPath)) {
-    return res.status(404).json({ error: 'repos.json not found. Run scan:repos' });
+app.get('/api/repos', async (req, res) => {
+  try {
+    const reposPath = path.join(publicDir, 'repos.json');
+    const local = fs.existsSync(reposPath) ? JSON.parse(fs.readFileSync(reposPath, 'utf8')) : [];
+    const githubUser = (req.query.github || '').toString().trim();
+    let remote = [];
+    if (githubUser) {
+      remote = await fetchGithubRepos(githubUser, process.env.GITHUB_TOKEN || process.env.GH_TOKEN);
+    }
+    const combined = [...local];
+    const seen = new Set(local.map(r => r.remote || r.path || r.name));
+    for (const r of remote) {
+      const key = r.remote || r.name;
+      if (!seen.has(key)) {
+        combined.push(r);
+        seen.add(key);
+      }
+    }
+    res.json(combined);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  const data = JSON.parse(fs.readFileSync(reposPath, 'utf8'));
-  res.json(data);
 });
 
 app.post('/api/install', express.json(), (req, res) => {
@@ -39,6 +55,16 @@ app.get('/api/install/status', (_req, res) => {
     const list = fs.existsSync(reposPath) ? JSON.parse(fs.readFileSync(reposPath, 'utf8')) : [];
     const status = list.map(r => ({ name: r.name, desktopEntry: getDesktopEntryPathForRepo(r), installed: fs.existsSync(getDesktopEntryPathForRepo(r)) }));
     res.json(status);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/github/:user/repos', async (req, res) => {
+  try {
+    const user = req.params.user;
+    const records = await fetchGithubRepos(user, process.env.GITHUB_TOKEN || process.env.GH_TOKEN);
+    res.json(records);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
