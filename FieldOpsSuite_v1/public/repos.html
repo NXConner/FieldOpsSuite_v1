@@ -53,7 +53,7 @@
             row.className = 'repo';
 
             const left = document.createElement('div');
-            left.innerHTML = `<div><strong>${repo.name}</strong></div><div class="meta">${repo.path}${repo.remote ? ' · ' + repo.remote : ''}</div>`;
+            left.innerHTML = `<div><strong>${repo.name}</strong></div><div class="meta">${repo.path || ''}${repo.remote ? (repo.path ? ' · ' : '') + repo.remote : ''}</div>`;
 
             const actions = document.createElement('div');
             actions.className = 'actions';
@@ -67,17 +67,29 @@
               actions.appendChild(openRemote);
             }
 
-            const openLocal = document.createElement('a');
-            openLocal.className = 'button';
-            openLocal.href = `vscode://file/${encodeURIComponent(repo.path)}`;
-            openLocal.textContent = 'Open in Editor';
-            actions.appendChild(openLocal);
+            if (repo.path) {
+              const openLocal = document.createElement('a');
+              openLocal.className = 'button';
+              openLocal.href = `vscode://file/${encodeURIComponent(repo.path)}`;
+              openLocal.textContent = 'Open in Editor';
+              actions.appendChild(openLocal);
 
-            const browseFs = document.createElement('a');
-            browseFs.className = 'button';
-            browseFs.href = repo.path.startsWith('/') ? `file://${repo.path}` : repo.path;
-            browseFs.textContent = 'Browse Files';
-            actions.appendChild(browseFs);
+              const browseFs = document.createElement('a');
+              browseFs.className = 'button';
+              browseFs.href = repo.path.startsWith('/') ? `file://${repo.path}` : repo.path;
+              browseFs.textContent = 'Browse Files';
+              actions.appendChild(browseFs);
+            }
+
+            // Lovable preview support
+            if (repo.provider === 'Lovable' && repo.previewUrl) {
+              const previewBtn = document.createElement('a');
+              previewBtn.className = 'button';
+              previewBtn.href = `lovable-preview.html?url=${encodeURIComponent(repo.previewUrl)}`;
+              previewBtn.textContent = 'Preview';
+              previewBtn.target = '_blank';
+              actions.appendChild(previewBtn);
+            }
 
             row.appendChild(left);
             row.appendChild(actions);

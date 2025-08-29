@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lovable Project Preview</title>
+    <style>
+      :root { color-scheme: light dark; }
+      html, body { height: 100%; margin: 0; }
+      body { display: flex; flex-direction: column; }
+      header { padding: 10px 12px; display:flex; align-items:center; gap: 8px; border-bottom: 1px solid #8884; }
+      header input { flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #8884; background: transparent; color: inherit; }
+      header a.button, header button { padding: 8px 12px; border-radius: 8px; border: 1px solid #8884; background: transparent; color: inherit; text-decoration: none; cursor: pointer; }
+      header a.button:hover, header button:hover { background: #8882; }
+      #frame { flex: 1; width: 100%; border: 0; }
+      .muted { color: #888; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <strong>Lovable Preview</strong>
+      <input id="url" placeholder="https://lovable.dev/your-project/preview" />
+      <button id="loadBtn">Load</button>
+      <a class="button" href="repos.html">Back</a>
+    </header>
+    <iframe id="frame" allow="clipboard-write; clipboard-read; autoplay; fullscreen" referrerpolicy="no-referrer"></iframe>
+    <script>
+      function getParam(name) {
+        const u = new URL(window.location.href);
+        return u.searchParams.get(name);
+      }
+      function setParam(name, value) {
+        const u = new URL(window.location.href);
+        if (value) u.searchParams.set(name, value); else u.searchParams.delete(name);
+        history.replaceState(null, '', u.toString());
+      }
+      function load() {
+        const urlEl = document.getElementById('url');
+        const frame = document.getElementById('frame');
+        const raw = (urlEl.value || '').trim();
+        if (!raw) return;
+        try {
+          const u = new URL(raw);
+          // Basic allowlist: only load http(s)
+          if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error('Invalid protocol');
+          frame.src = u.toString();
+          setParam('url', u.toString());
+        } catch (e) {
+          alert('Invalid URL');
+        }
+      }
+      document.getElementById('loadBtn').addEventListener('click', load);
+      document.getElementById('url').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') load();
+      });
+      const initial = getParam('url');
+      if (initial) {
+        document.getElementById('url').value = initial;
+        document.getElementById('frame').src = initial;
+      }
+    </script>
+  </body>
+  </html>
+
