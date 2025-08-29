@@ -30,6 +30,7 @@ jobs:
           path: |
             data/qrScans.json
             public/heatmapOverlay.json
+            public/heatmap.geojson
 
       - name: Upload to Supabase Storage (optional)
         if: ${{ secrets.SUPABASE_URL && secrets.SUPABASE_SERVICE_ROLE_KEY && secrets.SUPABASE_BUCKET }}
@@ -43,6 +44,11 @@ jobs:
             -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
             -H "Content-Type: application/json" \
             --data-binary @public/heatmapOverlay.json \
+            -o /dev/null -w "%{http_code}\n"
+          curl -sS -X POST "$SUPABASE_URL/storage/v1/object/$SUPABASE_BUCKET/public/heatmap.geojson" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/geo+json" \
+            --data-binary @public/heatmap.geojson \
             -o /dev/null -w "%{http_code}\n"
           curl -sS -X POST "$SUPABASE_URL/storage/v1/object/$SUPABASE_BUCKET/data/qrScans.json" \
             -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \

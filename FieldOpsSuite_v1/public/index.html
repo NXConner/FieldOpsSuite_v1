@@ -7,6 +7,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <title>FieldOpsSuite – Dashboard</title>
     <link rel="stylesheet" href="./styles.css" />
+    <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
   </head>
   <body>
     <noscript>This app requires JavaScript enabled.</noscript>
@@ -50,8 +51,20 @@
               <span class="drag-handle" title="Drag">⠿</span>
             </div>
           </header>
-          <div id="heatmapBody" class="widget-body">
-            <div class="skeleton"></div>
+          <div class="widget-body">
+            <div style="margin-bottom:8px; display:flex; gap:8px; align-items:center;">
+              <label for="heatmapFilter" style="font-size:12px; color:var(--muted)">Filter:</label>
+              <select id="heatmapFilter" class="btn">
+                <option value="all">All</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div id="heatmapMap" style="height:260px; border:1px solid var(--border); border-radius:10px; margin-bottom:8px;"></div>
+            <div id="heatmapBody">
+              <div class="skeleton"></div>
+            </div>
           </div>
         </article>
 
@@ -90,6 +103,7 @@
         });
       }
     </script>
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js" defer></script>
     <script src="./bridge.js" defer></script>
     <script src="./dashboard.js" defer></script>
   </body>
