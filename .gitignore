@@ -1,1 +1,5 @@
-*.exe\n*.apk\nnode_modules/\n.env
+*.env
+node_modules/
+dist/
+build/
+.DS_Store
