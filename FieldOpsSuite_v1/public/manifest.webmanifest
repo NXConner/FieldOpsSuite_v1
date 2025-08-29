@@ -1,0 +1,18 @@
+{
+  "name": "FieldOpsSuite",
+  "short_name": "FieldOps",
+  "description": "Modular Logistics Intelligence Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='24' fill='%231e293b'/%3E%3Cpath d='M28 86l16-44 16 22 24-10 16 32' stroke='%23a3e635' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ctext x='64' y='110' font-size='22' text-anchor='middle' fill='%23e2e8f0' font-family='sans-serif'%3EFOS%3C/text%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
